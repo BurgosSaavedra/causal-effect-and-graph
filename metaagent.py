@@ -10,7 +10,6 @@ This script provides a structure for implementing on_create, on_receive, and on_
 It includes a basic example using 'foo' and 'bar' concepts to demonstrate functionality.
 Each function should return a dictionary object with result data, or None if no result is needed.
 """
-import pandas as pd
 
 # Global variable to store the 'foo' and 'bar' values
 #foo_value = None
@@ -52,4 +51,4 @@ def on_destroy() -> dict | None:
     Returns:
         dict | None: Final values of 'foo' and 'bar'.
     """
-    return None
+    return {}
