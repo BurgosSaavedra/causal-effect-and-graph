@@ -26,7 +26,7 @@ def on_create(data: dict) -> dict | None:
     Returns:
         dict | None: Configuration dictionary with initialized 'foo' value.
     """
-    return None
+    return {}
 
 def on_receive(data: dict) -> dict:
     """
