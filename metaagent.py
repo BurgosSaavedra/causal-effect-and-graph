@@ -42,11 +42,9 @@ def on_receive(data: dict) -> dict:
         dict or list[dict]: Result of processing the event data, including a 'foo_bar' value.
     """
 
-    ambient_temp = data.get("ambient_temp", None)
+    #ambient_temp = data.get("ambient_temp", None)
 
-    return {
-        "return_ambient_temp": 5
-    }
+    return data
 
 def on_destroy() -> dict | None:
     """
