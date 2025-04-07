@@ -12,8 +12,8 @@ Each function should return a dictionary object with result data, or None if no 
 """
 
 # Global variable to store the 'foo' and 'bar' values
-#foo_value = None
-#bar_value = None
+foo_value = None
+bar_value = None
 
 def on_create(data: dict) -> dict | None:
     """
@@ -25,7 +25,11 @@ def on_create(data: dict) -> dict | None:
     Returns:
         dict | None: Configuration dictionary with initialized 'foo' value.
     """
-    return {}
+    global foo_value
+    foo_value = data.get("foo", 0)
+    return {
+        "initialized_foo": foo_value
+    }
 
 def on_receive(data: dict) -> dict:
     """
@@ -51,4 +55,8 @@ def on_destroy() -> dict | None:
     Returns:
         dict | None: Final values of 'foo' and 'bar'.
     """
-    return {}
+    global foo_value, bar_value
+    return {
+        "final_foo": foo_value,
+        "final_bar": bar_value
+    }
