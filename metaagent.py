@@ -10,6 +10,8 @@ This script provides a structure for implementing on_create, on_receive, and on_
 It includes a basic example using 'foo' and 'bar' concepts to demonstrate functionality.
 Each function should return a dictionary object with result data, or None if no result is needed.
 """
+# Install Libraries
+import pandas as pd
 
 # Global variable to store the 'foo' and 'bar' values
 foo_value = None
@@ -43,7 +45,11 @@ def on_receive(data: dict) -> dict:
     """
 
     #ambient_temp = data.get("ambient_temp", None)
-    print(f"The data is {data}")
+    #print(f"The data is {data}")
+    # Convert to DataFrame
+    df = pd.DataFrame(data)
+    # Show first 5 rows
+    print(df.head())
 
     return data
 
