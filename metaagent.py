@@ -45,7 +45,7 @@ def on_receive(data: dict) -> dict:
     ambient_temp = data.get("ambient_temp", None)
 
     return {
-        "return_ambient_temp": ambient_temp
+        "return_ambient_temp": 5
     }
 
 def on_destroy() -> dict | None:
