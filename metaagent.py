@@ -43,7 +43,7 @@ def on_receive(data: dict) -> dict:
     """
 
     #ambient_temp = data.get("ambient_temp", None)
-    print("My name is Marcos")
+    print(f"The data is {data}")
 
     return data
 
