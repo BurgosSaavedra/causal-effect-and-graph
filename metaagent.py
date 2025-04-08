@@ -11,7 +11,13 @@ It includes a basic example using 'foo' and 'bar' concepts to demonstrate functi
 Each function should return a dictionary object with result data, or None if no result is needed.
 """
 # Install Libraries
+import dowhy
+from dowhy import CausalModel
 import pandas as pd
+import networkx as nx
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
 # Global variable to store the 'foo' and 'bar' values
 foo_value = None
@@ -44,14 +50,96 @@ def on_receive(data: dict) -> dict:
         dict or list[dict]: Result of processing the event data, including a 'foo_bar' value.
     """
 
-    #ambient_temp = data.get("ambient_temp", None)
-    #print(f"The data is {data}")
-    # Convert to DataFrame
-    df = pd.DataFrame(data)
-    # Show first 5 rows
-    print(df.head())
+    ## Read only the test dataset
+    df = pd.read_csv('cat797f_egt_causal_data.csv')
 
-    return data
+    # Create causal graph
+    G = nx.DiGraph()
+
+    # Define edges with logical grouping
+    edges = [
+        # Air intake system
+        ('operating_altitude', 'air_filter_pressure'),
+        ('air_filter_pressure', 'egt_turbo_inlet'),
+        ('air_filter_pressure', 'fuel_consumption'),
+        
+        # Primary mechanical relationships
+        ('payload_weight', 'engine_load'),
+        ('haul_road_gradient', 'engine_load'),
+        ('engine_load', 'engine_rpm'),
+        ('engine_load', 'fuel_consumption'),
+        ('engine_rpm', 'vehicle_speed'),
+        ('engine_rpm', 'air_filter_pressure'),
+        
+        # Environmental influences
+        ('operating_altitude', 'engine_load'),
+        ('ambient_temp', 'engine_coolant_temp'),
+        ('ambient_temp', 'egt_turbo_inlet'),
+        
+        # Fuel and combustion chain
+        ('fuel_consumption', 'egt_turbo_inlet'),
+        ('engine_load', 'egt_turbo_inlet'),
+        
+        # Temperature cascade through exhaust system
+        ('egt_turbo_inlet', 'egt_turbo_outlet'),
+        ('egt_turbo_outlet', 'egt_stack'),
+        
+        # Cooling system relationships
+        ('engine_coolant_temp', 'egt_turbo_inlet'),
+        ('engine_rpm', 'engine_coolant_temp')
+    ]
+
+    # Add edges to graph
+    G.add_edges_from(edges)
+
+    def analyze_causal_effect(df, G, treatment, outcome):
+        try:
+            model = CausalModel(
+                data=df,
+                graph=G,
+                treatment=treatment,
+                outcome=outcome
+            )
+            
+            identified_estimand = model.identify_effect(proceed_when_unidentifiable=True)
+            estimate = model.estimate_effect(
+                identified_estimand,
+                method_name="backdoor.linear_regression",
+                control_value=0,
+                treatment_value=1
+            )
+            
+            return float(estimate.value)
+        except:
+            return np.nan
+
+    # Analyze causal relationships
+    treatments = ['air_filter_pressure', 'engine_coolant_temp', 'engine_load', 
+                'ambient_temp', 'engine_rpm', 'fuel_consumption']
+    outcomes = ['egt_turbo_inlet', 'egt_turbo_outlet', 'egt_stack']
+
+    print("\nCausal Effect Analysis:")
+    print("=====================")
+
+    # Create a dictionary to store valid causal effects
+    causal_effects = {}
+    effect_data = []
+
+    for treatment in treatments:
+        for outcome in outcomes:
+            if treatment != outcome:
+                effect = analyze_causal_effect(df, G, treatment, outcome)
+                if not np.isnan(effect):
+                    causal_effects[(treatment, outcome)] = effect
+                    effect_data.append({
+                        'Treatment': treatment,
+                        'Outcome': outcome,
+                        'Effect': effect
+                    })
+                    print(f"\n{treatment.replace('_', ' ').title()} → {outcome.replace('_', ' ').title()}:")
+                    print(f"Causal Effect: {effect:.3f}")
+
+    return {}
 
 def on_destroy() -> dict | None:
     """
