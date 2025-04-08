@@ -18,6 +18,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import traceback
 
 # Global variable to store the 'foo' and 'bar' values
 foo_value = None
@@ -113,6 +114,8 @@ def on_receive(data: dict) -> dict:
             return float(estimate.value)
         except:
             print("incorrect")
+            print(f"Error: {e}")
+            traceback.print_exc()
             return np.nan
 
     # Analyze causal relationships
