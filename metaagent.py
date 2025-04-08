@@ -51,7 +51,7 @@ def on_receive(data: dict) -> dict:
     """
 
     ## Read only the test dataset
-    df = pd.read_csv('cat797f_egt_causal_data.csv')
+    df = pd.DataFrame(data)
 
     # Create causal graph
     G = nx.DiGraph()
