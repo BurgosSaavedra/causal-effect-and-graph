@@ -95,7 +95,6 @@ def on_receive(data: dict) -> dict:
 
     def analyze_causal_effect(df, G, treatment, outcome):
         try:
-            print("correct")
             model = CausalModel(
                 data=df,
                 graph=G,
