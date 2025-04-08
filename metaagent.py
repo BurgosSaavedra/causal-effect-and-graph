@@ -112,7 +112,7 @@ def on_receive(data: dict) -> dict:
             )
             
             return float(estimate.value)
-        except:
+        except Exception as e:
             print("incorrect")
             print(f"Error: {e}")
             traceback.print_exc()
