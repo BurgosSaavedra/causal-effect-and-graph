@@ -93,6 +93,7 @@ def on_receive(data: dict) -> dict:
     G.add_edges_from(edges)
 
     def analyze_causal_effect(df, G, treatment, outcome):
+        print("I am here")
         try:
             model = CausalModel(
                 data=df,
