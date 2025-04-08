@@ -93,7 +93,6 @@ def on_receive(data: dict) -> dict:
     G.add_edges_from(edges)
 
     def analyze_causal_effect(df, G, treatment, outcome):
-        print("I am here")
         try:
             model = CausalModel(
                 data=df,
@@ -130,6 +129,7 @@ def on_receive(data: dict) -> dict:
         for outcome in outcomes:
             if treatment != outcome:
                 effect = analyze_causal_effect(df, G, treatment, outcome)
+                print(f"Effect: {effect}")
                 if not np.isnan(effect):
                     causal_effects[(treatment, outcome)] = effect
                     effect_data.append({
@@ -139,7 +139,7 @@ def on_receive(data: dict) -> dict:
                     })
                     print(f"\n{treatment.replace('_', ' ').title()} → {outcome.replace('_', ' ').title()}:")
                     print(f"Causal Effect: {effect:.3f}")
-
+    print("End of the game") #
     return {}
 
 def on_destroy() -> dict | None:
