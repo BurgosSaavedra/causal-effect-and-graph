@@ -94,6 +94,7 @@ def on_receive(data: dict) -> dict:
 
     def analyze_causal_effect(df, G, treatment, outcome):
         try:
+            print("correct")
             model = CausalModel(
                 data=df,
                 graph=G,
@@ -111,6 +112,7 @@ def on_receive(data: dict) -> dict:
             
             return float(estimate.value)
         except:
+            print("incorrect")
             return np.nan
 
     # Analyze causal relationships
@@ -139,7 +141,6 @@ def on_receive(data: dict) -> dict:
                     })
                     print(f"\n{treatment.replace('_', ' ').title()} → {outcome.replace('_', ' ').title()}:")
                     print(f"Causal Effect: {effect:.3f}")
-    print("End of the game") #
     return {}
 
 def on_destroy() -> dict | None:
