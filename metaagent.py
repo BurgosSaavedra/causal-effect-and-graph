@@ -21,6 +21,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use a non-interactive backend (useful for script execution)
 import matplotlib.pyplot as plt
 import json
+from datetime import datetime
 
 # Global variable to store the 'foo' and 'bar' values
 foo_value = None
@@ -244,7 +245,11 @@ def on_receive(data: dict) -> dict:
         iccs_dict[variable] = rounded_value
         summary_lines.append(f"{variable} = {rounded_value}%")
 
+    # Add this before creating the result dictionary
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # e.g., '2025-04-14 14:25:00'
+
     result = {
+        "timestamp": timestamp,
         "strength": json.dumps(strength_dict),  # Serialized to JSON string
         "iccs": json.dumps(iccs_dict),          # Serialized to JSON string
         "summary": "\n".join(summary_lines)
