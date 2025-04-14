@@ -20,6 +20,10 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')  # Use a non-interactive backend (useful for script execution)
 import matplotlib.pyplot as plt
+import json
+
+# Set a fixed random seed for reproducibility when using generative causal models.
+gcm.util.general.set_random_seed(0)
 
 # Global variable to store the 'foo' and 'bar' values
 foo_value = None
@@ -120,14 +124,15 @@ def on_receive(data: dict) -> dict:
     3. Assigns generative models to the nodes.
     4. Fits the causal model to data.
     5. Computes and plots the causal graph and variance attribution.
-    6. Returns a summary dictionary with readable results.
+    6. Returns a result dictionary with numeric strength and ICCs, plus a formatted summary.
     
     Returns:
-        dict: A dictionary with a key 'summary' containing the model results as a string.
+        dict: A dictionary with keys 'strength', 'iccs', and 'summary'.
     """
     
-    ## Read only the test dataset
-    df = pd.DataFrame(data)
+    # Read the test dataset into a pandas DataFrame.
+    #df = pd.read_csv('cat797f_egt_causal_data.csv') # For local
+    df = pd.DataFrame(data) # For meta agent
 
     # --- Step 1: Define Causal Model ---
     # Create a directed graph representing the causal relationships
@@ -181,13 +186,11 @@ def on_receive(data: dict) -> dict:
     # --- Step 3: Answer Causal Question ---
 
     # (A) Plotting the Causal Graph with Arrow Strength Percentages
-    arrow_strengths = gcm.arrow_strength(
-        scm, 
-        target_node='egt_turbo_inlet'
-    )
+    arrow_strengths = gcm.arrow_strength(scm, target_node='egt_turbo_inlet')
+    arrow_strengths_pct = convert_to_percentage(arrow_strengths)
 
     plot(causal_graph,
-         causal_strengths=convert_to_percentage(arrow_strengths),
+         causal_strengths=arrow_strengths_pct,
          figure_size=[15, 10])
     
     # Retrieve and save the current figure as a PNG file.
@@ -202,31 +205,52 @@ def on_receive(data: dict) -> dict:
         num_samples_randomization=500
     )
     
+    iccs_pct = convert_to_percentage(iccs)
+
     # Create a bar plot for the ICCs using percentage values.
-    bar_plot(convert_to_percentage(iccs), ylabel='Variance attribution in %')
+    bar_plot(iccs_pct, ylabel='Variance attribution in %')
     
     # Retrieve and save the bar plot as a PNG file.
     fig = plt.gcf()
     fig.savefig("variance_attribution.png", format='png', dpi=300, bbox_inches='tight')
     plt.close(fig)
 
-    # Create a summary string containing the results
-    summary = f"""
-    This is the result using dowhy.gcm on the data:
+    # --- Prepare Output Dictionaries ---
+    strength_dict = {}
+    iccs_dict = {}
+    summary_lines = []
 
-    - Treatments: {treatments}
-    - Outcomes: {outcomes}
+    # Build human-readable summary
+    summary_lines.append("This is the result using dowhy.gcm on the data:\n")
+    summary_lines.append(f"- Treatments: {treatments}")
+    summary_lines.append(f"- Outcomes: {outcomes}\n")
 
-    Arrow Strengths:
-    ----------------
-    {get_readable_percentages_arrow(convert_to_percentage(arrow_strengths))}
+    summary_lines.append("Arrow Strengths:\n----------------")
+    for treatment in treatments:
+        # Attempt to retrieve the arrow strength for the given treatment and the primary outcome
+        value = arrow_strengths_pct.get((treatment, outcomes[0]))
+        
+        if value is not None:
+            rounded_value = round(value, 2)
+            strength_dict[treatment] = rounded_value
+            summary_lines.append(f"{treatment} -> {outcomes[0]} = {rounded_value}%")
+        else:
+            # Handle the case where no value was found
+            strength_dict[treatment] = None
 
-    ICCs:
-    -----
-    {get_readable_percentages_iccs(convert_to_percentage(iccs))}
-    """
-    
-    return {'summary': summary}
+    summary_lines.append("\nICCs:\n-----")
+    for variable, value in iccs_pct.items():
+        rounded_value = round(value, 2)
+        iccs_dict[variable] = rounded_value
+        summary_lines.append(f"{variable} = {rounded_value}%")
+
+    result = {
+        "strength": json.dumps(strength_dict),  # Serialized to JSON string
+        "iccs": json.dumps(iccs_dict),          # Serialized to JSON string
+        "summary": "\n".join(summary_lines)
+    }
+
+    return result
 
 def on_destroy() -> dict | None:
     """
