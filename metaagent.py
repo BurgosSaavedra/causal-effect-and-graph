@@ -22,9 +22,6 @@ matplotlib.use('Agg')  # Use a non-interactive backend (useful for script execut
 import matplotlib.pyplot as plt
 import json
 
-# Set a fixed random seed for reproducibility when using generative causal models.
-gcm.util.general.set_random_seed(0)
-
 # Global variable to store the 'foo' and 'bar' values
 foo_value = None
 bar_value = None
@@ -55,6 +52,9 @@ def on_receive(data: dict) -> dict:
     Returns:
         dict or list[dict]: Result of processing the event data, including a 'foo_bar' value.
     """
+
+    # Set a fixed random seed for reproducibility when using generative causal models.
+    gcm.util.general.set_random_seed(0)
 
     """Functions"""
 
